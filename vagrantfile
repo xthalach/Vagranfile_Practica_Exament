@@ -1,0 +1,60 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+	# Configuració servidor-primari
+	config.vm.define "servidor-primari" do |nodo1|
+	 nodo1.vm.box = "chenhan/ubuntu-desktop-20.04"
+	 nodo1.vm.host_name = "servidor-primari"
+	 nodo1.vm.network "public_network", ip: "192.168.202.210", netmask: "255.255.255.0", bridge: "eno1" # Modificar nom de la interficie
+	 nodo1.vm.network "private_network", ip: "192.168.76.1", netmask: "255.255.255.0", virtualbox__intnet: "ASIX2-EX" # Modificar ip + nom de la intnet
+	 nodo1.vm.network "private_network", ip: "192.168.176.1", netmask: "255.255.255.0", virtualbox__intnet: "DAM2-EX" # Modificar ip + nom de la intnet
+	 nodo1.vm.provider "virtualbox" do |v|
+	  v.name="servidor-primari-prova"
+	  v.memory = 2048
+	  v.cpus = 1
+	 end
+	 nodo1.vm.provision "shell", inline: $update
+	 nodo1.vm.provision "shell", inline: $packs
+	end
+
+	# Configuració servidor-secundari
+	config.vm.define "servidor-secundari" do |nodo2|
+	 nodo2.vm.box = "chenhan/ubuntu-desktop-20.04"
+	 nodo2.vm.host_name = "servidor-secundari-prova"
+	 nodo2.vm.network "public_network", ip: "192.168.202.211", netmask: "255.255.255.0", bridge: "eno1" # Modificar nom de la interficie 
+	 nodo2.vm.network "private_network", ip: "192.168.76.2", netmask: "255.255.255.0", virtualbox__intnet: "ASIX2-EX" # Modificar ip + nom de la intnet
+	 nodo2.vm.network "private_network", ip: "192.168.176.2", netmask: "255.255.255.0", virtualbox__intnet: "DAM2-EX" # Modificar ip + nom de la intnet
+	 nodo2.vm.provider "virtualbox" do |v|
+	  v.name="servidor-secundari-prova"
+	  v.memory = 2048
+	  v.cpus = 1
+	 end
+	 nodo2.vm.provision "shell", inline: $update
+	 nodo2.vm.provision "shell", inline: $packs
+	end
+
+	# Configuració client-linux 
+	config.vm.define "client-linux" do |nodo3|
+	 nodo3.vm.box = "chenhan/ubuntu-desktop-20.04"
+	 nodo3.vm.host_name = "client-linux-prova"
+	 nodo3.vm.network "private_network", ip: "192.168.76.10", netmask: "255.255.255.0", virtualbox__intnet: "ASIX2-EX" # Modificar la ip + nom de la intnet
+	 nodo3.vm.provider "virtualbox" do |v|
+	  v.name="client-linux"
+	  v.memory = 2048
+	  v.cpus = 1
+	 end
+	 nodo3.vm.provision "shell", inline: $update
+	end
+	 
+	# Scripts per actualitzar i posar els paquets necessaris per als servidors.
+	 $update = <<-SCRIPT
+	 echo "Actualitzar repositoris"
+	 sudo apt-get update 
+	SCRIPT
+
+	 $packs = <<-SCRIPT 
+	 sudo apt-get install bind9 bind9-doc bind9utils isc-dhcp-server resolvconf net-tools ifupdown -y
+	SCRIPT
+end
